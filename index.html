@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ChromaFlux | iOS Edition</title>
+    <title>ChromaFlux | Bilinear Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -11,172 +11,251 @@
         
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #050505;
             -webkit-tap-highlight-color: transparent;
-            /* Aggressively disable bounce scroll */
-            overscroll-behavior: none;
+            overscroll-behavior: none; /* Aggressive scroll lock */
         }
 
         .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Hide Scrollbars entirely for native feel */
-        ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Native iOS Range Slider */
-        input[type="range"] {
-            -webkit-appearance: none;
-            background: transparent;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #ffffff;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.1);
-            margin-top: -10px;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
+        /* Desktop Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        
+        /* Hide Mobile Scrollbars */
+        @media (max-width: 639px) {
+            .mobile-no-scroll::-webkit-scrollbar { display: none; }
+            .mobile-no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         }
 
-        /* Safe Areas for notch/home bar */
+        /* Glassmorphism Desktop Utility */
+        @media (min-width: 640px) {
+            .glass-pill {
+                background: rgba(20, 20, 20, 0.4);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            }
+        }
+
+        /* Responsive Range Slider */
+        input[type="range"] { -webkit-appearance: none; background: transparent; }
+        
+        @media (max-width: 639px) {
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                height: 24px; width: 24px;
+                border-radius: 50%;
+                background: #ffffff;
+                cursor: pointer;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.1);
+                margin-top: -10px;
+            }
+            input[type="range"]::-webkit-slider-runnable-track {
+                width: 100%; height: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+            }
+        }
+        @media (min-width: 640px) {
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none; appearance: none;
+                width: 18px; height: 18px;
+                background: #ffffff;
+                cursor: pointer; border-radius: 50%;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+                transition: transform 0.1s;
+            }
+            input[type="range"]::-webkit-slider-thumb:active { transform: scale(0.85); }
+        }
+
+        /* Safe Areas for iPhone home bar / notch */
         .safe-pt { padding-top: max(env(safe-area-inset-top), 16px); }
         .safe-pb { padding-bottom: max(env(safe-area-inset-bottom), 20px); }
 
-        /* Active Cell Feedback */
+        /* Cell Interaction Styles */
+        @media (min-width: 640px) {
+            .cell-hover:hover {
+                transform: scale(1.05);
+                z-index: 20;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            }
+        }
         .active-cell {
             z-index: 30;
             transform: scale(1.08);
             border-radius: 8px;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            outline: 2px solid white;
+            outline-offset: -2px;
         }
 
-        /* Top Dropdown Toast */
-        @keyframes dropDown {
+        /* Responsive Studio Sidebar */
+        #sidebar { z-index: 50; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        @media (max-width: 639px) {
+            #sidebar {
+                position: absolute; bottom: 0; left: 0; right: 0;
+                height: 80dvh; background: #151515;
+                border-radius: 2.5rem 2.5rem 0 0;
+                box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
+                transform: translateY(100%);
+            }
+            #sidebar.sidebar-active { transform: translateY(0); }
+        }
+        @media (min-width: 640px) {
+            #sidebar {
+                position: fixed; top: 6rem; bottom: 6rem; right: 1.5rem;
+                width: 320px;
+                background: rgba(20, 20, 20, 0.4);
+                backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 2rem;
+                box-shadow: 0 20px 50px -12px rgba(0,0,0,0.8);
+                transform: translateX(120%) scale(0.95);
+                opacity: 0; pointer-events: none;
+            }
+            #sidebar.sidebar-active {
+                transform: translateX(0) scale(1);
+                opacity: 1; pointer-events: auto;
+            }
+        }
+
+        /* Mobile Sheet Backdrop */
+        #sheetBackdrop { transition: opacity 0.3s; }
+        #sheetBackdrop.active { opacity: 1; pointer-events: auto; }
+        @media (min-width: 640px) { #sheetBackdrop { display: none; } }
+
+        /* Toast Animation */
+        @keyframes toastSlide {
             0% { transform: translate(-50%, -120%); opacity: 0; }
             100% { transform: translate(-50%, 0); opacity: 1; }
         }
-        .toast-active {
-            display: flex !important;
-            animation: dropDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        .toast-active { display: flex !important; animation: toastSlide 0.3s forwards; }
     </style>
 </head>
-<!-- fixed inset-0 completely destroys any chance of body scrolling -->
-<body class="fixed inset-0 w-full bg-black text-gray-200 select-none touch-none flex justify-center">
+<body class="fixed inset-0 w-full text-gray-200 select-none overflow-hidden flex flex-col items-center">
 
-    <!-- Mobile App Container (Clamped to iPhone Pro Max width) -->
-    <div class="w-full max-w-[430px] h-full flex flex-col relative bg-[#050505] shadow-[0_0_50px_rgba(0,0,0,0.8)] sm:border-x sm:border-white/10 overflow-hidden">
-        
-        <!-- Ambient Background -->
-        <div class="absolute inset-0 pointer-events-none opacity-20 z-0">
-            <div class="absolute top-0 left-[-20%] w-[100%] h-[50%] bg-blue-600/30 blur-[100px] rounded-full mix-blend-screen animate-pulse"></div>
-            <div class="absolute bottom-0 right-[-20%] w-[100%] h-[50%] bg-purple-600/30 blur-[100px] rounded-full mix-blend-screen animate-pulse" style="animation-delay: 2s"></div>
-        </div>
+    <!-- Responsive Ambient Background -->
+    <div class="absolute inset-0 pointer-events-none opacity-20 sm:opacity-[0.15] transition-colors duration-1000 z-0">
+        <div class="absolute top-0 sm:top-[-20%] left-[-20%] sm:left-[-10%] w-[100%] sm:w-[60%] h-[50%] sm:h-[60%] bg-blue-600/30 sm:bg-blue-600 blur-[100px] sm:blur-[140px] rounded-full mix-blend-screen animate-pulse"></div>
+        <div class="absolute bottom-0 sm:bottom-[-20%] right-[-20%] sm:right-[-10%] w-[100%] sm:w-[60%] h-[50%] sm:h-[60%] bg-purple-600/30 sm:bg-purple-600 blur-[100px] sm:blur-[140px] rounded-full mix-blend-screen animate-pulse" style="animation-delay: 2s"></div>
+    </div>
 
-        <!-- iOS Style Header -->
-        <header class="w-full flex justify-center items-center safe-pt pb-3 z-40 bg-[#1c1c1e]/80 backdrop-blur-2xl border-b border-white/10 shrink-0">
+    <!-- Responsive Header -->
+    <header class="w-full sm:w-auto flex justify-center items-center sm:absolute sm:top-8 sm:left-1/2 sm:-translate-x-1/2 safe-pt pb-3 sm:pt-0 sm:pb-0 z-40 bg-[#1c1c1e]/80 sm:bg-transparent backdrop-blur-2xl sm:backdrop-blur-none border-b border-white/10 sm:border-none shrink-0 transition-all">
+        <div class="sm:glass-pill sm:px-6 sm:py-3 sm:rounded-full flex items-center gap-4 transition-all duration-300 sm:hover:bg-white/10 w-fit max-w-[90vw]">
+            
+            <div class="hidden sm:flex items-center gap-2 shrink-0">
+                <div class="w-3 h-3 bg-gradient-to-br from-green-400 to-blue-500 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+                <span class="text-white font-bold tracking-widest uppercase text-xs">Chroma</span>
+            </div>
+            
+            <div class="hidden sm:block w-px h-4 bg-white/20 shrink-0"></div>
+            
             <input 
                 id="projectName" 
                 type="text" 
                 value="Palette #E8F5C8" 
-                class="bg-transparent border-none outline-none text-sm font-semibold text-center text-white placeholder-gray-500 w-48 mt-1"
+                class="bg-transparent border-none outline-none text-sm sm:text-sm font-semibold sm:font-mono sm:font-medium text-center sm:text-left text-white sm:text-gray-300 placeholder-gray-500 sm:placeholder-gray-600 w-48 sm:w-36 mt-1 sm:mt-0 focus:text-white transition-colors"
                 autocomplete="off"
             >
-        </header>
-
-        <!-- Main Viewport (Grid) -->
-        <main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full min-h-0 px-4">
             
-            <!-- Contextual Color Info (Floats above grid) -->
-            <div id="tooltip" class="absolute top-6 left-1/2 -translate-x-1/2 bg-[#1c1c1e]/90 backdrop-blur-xl px-5 py-2.5 rounded-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50 pointer-events-none shadow-xl border border-white/10">
-                <div class="w-4 h-4 rounded-full shadow-inner border border-white/20" id="tooltipColorIndicator"></div>
-                <span id="tooltipHex" class="text-sm font-mono font-bold text-white tracking-widest">#FFFFFF</span>
-            </div>
+            <span id="swatchCount" class="hidden sm:block text-[10px] font-mono text-gray-500 bg-white/5 border border-white/10 px-2 py-1 rounded-full">16 SWATCHES</span>
+        </div>
+    </header>
 
-            <!-- The Grid -->
-            <div id="gridWrapper" class="w-full aspect-square relative transition-all duration-700">
-                <div id="colorGrid" class="w-full h-full grid rounded-3xl overflow-hidden shadow-2xl relative border border-white/5">
-                    <!-- JS Populated -->
-                </div>
-            </div>
-            
-            <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest mt-8">Tap to Copy Hex</p>
-        </main>
-
-        <!-- iOS Style Bottom Tab Bar -->
-        <footer class="w-full bg-[#1c1c1e]/80 backdrop-blur-2xl border-t border-white/10 safe-pb pt-4 px-6 z-40 flex flex-col gap-5 shrink-0">
-            
-            <!-- Density Control -->
-            <div class="flex items-center gap-4 px-2">
-                <i data-lucide="grid-2x2" class="w-5 h-5 text-gray-400 shrink-0"></i>
-                <input id="gridDensity" type="range" min="4" max="16" value="4" class="flex-1">
-                <span id="densityVal" class="text-xs font-mono font-medium text-gray-400 w-8 text-right shrink-0">4x4</span>
-            </div>
-
-            <!-- Tab Actions -->
-            <div class="flex justify-between items-center px-4 pb-2">
-                <button id="randomBtn" class="flex flex-col items-center gap-1.5 text-gray-400 active:text-white transition-colors p-2" aria-label="Randomize">
-                    <i data-lucide="shuffle" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-medium">Random</span>
-                </button>
-
-                <button id="saveBtn" class="flex flex-col items-center gap-1.5 text-gray-400 active:text-pink-400 transition-colors p-2" aria-label="Save">
-                    <i data-lucide="heart" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-medium">Save</span>
-                </button>
-
-                <button id="collectionsBtn" class="flex flex-col items-center gap-1.5 text-gray-400 active:text-blue-400 transition-colors p-2" aria-label="Studio">
-                    <i data-lucide="layers" class="w-6 h-6"></i>
-                    <span class="text-[10px] font-medium">Studio</span>
-                </button>
-            </div>
-        </footer>
-
-        <!-- Native iOS Style Bottom Sheet -->
-        <div id="sheetBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm z-[45] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <!-- Main Grid Viewport -->
+    <main class="flex-1 flex flex-col items-center justify-center relative z-10 w-full min-h-0 px-4 sm:px-0">
         
-        <div id="sidebar" class="absolute bottom-0 inset-x-0 bg-[#151515] rounded-t-[2.5rem] shadow-[0_-10px_50px_rgba(0,0,0,0.8)] z-50 transform translate-y-full transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] flex flex-col h-[80dvh]">
-            <!-- Drag Handle -->
-            <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-4 shrink-0"></div>
+        <div id="gridWrapper" class="w-full max-w-[430px] sm:max-w-none aspect-square sm:aspect-auto sm:w-[min(70vmin,460px)] sm:h-[min(70vmin,460px)] relative sm:p-3 sm:glass-pill sm:rounded-[2rem] transition-all duration-700">
             
-            <div class="px-6 py-4 flex justify-between items-center border-b border-white/5 shrink-0">
-                <h2 class="text-sm font-bold text-white tracking-wide">Saved Palettes</h2>
-                <button id="closeSidebar" class="p-2 bg-white/10 rounded-full text-gray-300 active:scale-90 transition-transform"><i data-lucide="x" class="w-4 h-4"></i></button>
+            <div id="colorGrid" class="w-full h-full grid rounded-3xl sm:rounded-[1.5rem] overflow-hidden sm:cursor-crosshair relative shadow-2xl sm:shadow-none border border-white/5 sm:border-none group">
+                <!-- JS Populated -->
             </div>
             
-            <!-- List (Internal Scroll allowed) -->
-            <div id="paletteList" class="flex-1 overflow-y-auto p-4 space-y-3 pb-[env(safe-area-inset-bottom)] -webkit-overflow-scrolling-touch">
-                <!-- Populated by JS -->
+            <!-- Tooltip (Floats inside on Desktop, Floats above on Mobile) -->
+            <div id="tooltip" class="absolute top-6 sm:top-auto sm:bottom-6 left-1/2 -translate-x-1/2 bg-[#1c1c1e]/90 sm:bg-black/60 backdrop-blur-xl sm:backdrop-blur-2xl px-5 sm:px-4 py-2.5 sm:py-2 rounded-full opacity-0 sm:scale-95 transition-all duration-200 flex items-center gap-3 sm:gap-2 z-50 pointer-events-none shadow-xl border border-white/10 sm:border-white/5">
+                <div class="w-4 h-4 sm:w-3 sm:h-3 rounded-full shadow-inner sm:shadow-none" id="tooltipColorIndicator"></div>
+                <span id="tooltipHex" class="text-sm sm:text-sm font-mono font-bold text-white tracking-widest">#FFFFFF</span>
             </div>
+            
+        </div>
+        <p class="text-[10px] font-medium text-gray-500 uppercase tracking-widest mt-8 sm:hidden">Tap to Copy Hex</p>
+    </main>
+
+    <!-- Responsive Footer / Dock -->
+    <footer class="w-full sm:w-max sm:absolute sm:bottom-8 sm:left-1/2 sm:-translate-x-1/2 bg-[#1c1c1e]/80 sm:bg-transparent backdrop-blur-2xl sm:backdrop-blur-none border-t border-white/10 sm:border-none safe-pb pt-4 sm:pt-0 px-6 sm:px-0 z-40 flex flex-col sm:flex-row gap-5 sm:gap-0 shrink-0 sm:glass-pill sm:p-3.5 sm:rounded-full sm:items-center">
+        
+        <!-- Density Control -->
+        <div class="flex items-center gap-4 sm:gap-4 px-2 sm:px-6 sm:py-3 sm:bg-black/40 sm:rounded-full shrink-0">
+            <i data-lucide="grid-2x2" class="w-5 h-5 text-gray-400 shrink-0 sm:hidden"></i>
+            <span class="densityValDesktop hidden sm:block text-xs font-mono text-gray-500 w-8 text-center">4x4</span>
+            <input id="gridDensity" type="range" min="4" max="16" value="4" class="flex-1 sm:w-36 sm:h-1.5 sm:bg-white/20 sm:rounded-full outline-none">
+            <span class="densityValMobile sm:hidden text-xs font-mono font-medium text-gray-400 w-8 text-right shrink-0">4x4</span>
         </div>
 
-        <!-- iOS Style Top Notification -->
-        <div id="toast" class="absolute safe-pt top-4 left-1/2 -translate-x-1/2 z-[100] hidden w-[90%] max-w-[340px]">
-            <div class="bg-[#2c2c2e]/95 backdrop-blur-xl text-white px-4 py-3 rounded-2xl flex items-center gap-3 shadow-2xl border border-white/10">
-                <div class="bg-green-500 rounded-full p-1.5 shrink-0"><i data-lucide="check" class="w-3.5 h-3.5 text-white"></i></div>
-                <span id="toastText" class="text-sm font-semibold tracking-wide">Copied to Clipboard</span>
-            </div>
-        </div>
+        <div class="hidden sm:block w-px h-8 bg-white/10 shrink-0 mx-2"></div>
 
+        <!-- Actions -->
+        <div class="flex justify-between items-center px-4 sm:px-0 pb-2 sm:pb-0 sm:gap-3">
+            <button id="randomBtn" class="group flex flex-col sm:flex-row sm:p-4 items-center gap-1.5 sm:gap-0 text-gray-400 sm:bg-black/40 sm:hover:bg-white sm:text-gray-400 sm:hover:text-black active:text-white sm:rounded-full transition-all duration-300" aria-label="Randomize" title="Spacebar">
+                <i data-lucide="shuffle" class="w-6 h-6 sm:hidden"></i>
+                <i data-lucide="refresh-cw" class="hidden sm:block w-6 h-6 group-hover:rotate-180 transition-transform duration-500"></i>
+                <span class="text-[10px] font-medium sm:hidden">Random</span>
+            </button>
+
+            <button id="saveBtn" class="group flex flex-col sm:flex-row sm:p-4 items-center gap-1.5 sm:gap-0 text-gray-400 sm:bg-black/40 sm:hover:bg-pink-500/20 active:text-pink-400 sm:hover:text-pink-500 sm:border sm:border-transparent sm:hover:border-pink-500/30 sm:rounded-full transition-all duration-300">
+                <i data-lucide="heart" class="w-6 h-6 group-hover:fill-pink-500 transition-colors duration-300"></i>
+                <span class="text-[10px] font-medium sm:hidden">Save</span>
+            </button>
+
+            <button id="collectionsBtn" class="flex flex-col sm:flex-row sm:p-4 items-center gap-1.5 sm:gap-0 text-gray-400 sm:bg-black/40 sm:hover:bg-white sm:text-gray-400 sm:hover:text-black active:text-blue-400 sm:rounded-full transition-all duration-300">
+                <i data-lucide="layers" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium sm:hidden">Studio</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Mobile Dimming Backdrop -->
+    <div id="sheetBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm z-[45] opacity-0 pointer-events-none"></div>
+    
+    <!-- Unified Sidebar / Bottom Sheet -->
+    <div id="sidebar" class="flex flex-col">
+        <!-- Mobile Drag Handle -->
+        <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-4 shrink-0 sm:hidden"></div>
+        
+        <div class="px-6 py-4 sm:p-6 flex justify-between items-center border-b border-white/5 shrink-0">
+            <h2 class="text-sm sm:text-xs font-bold text-white uppercase sm:tracking-widest tracking-wide">Saved Palettes</h2>
+            <button id="closeSidebar" class="p-2 bg-white/10 sm:bg-white/5 rounded-full text-gray-300 sm:text-gray-400 sm:hover:text-white sm:hover:bg-white/10 active:scale-90 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <div id="paletteList" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4 mobile-no-scroll custom-scrollbar pb-[env(safe-area-inset-bottom)]">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Responsive Toast -->
+    <div id="toast" class="absolute safe-pt top-4 sm:top-24 left-1/2 -translate-x-1/2 z-[100] hidden w-[90%] sm:w-auto max-w-[340px]">
+        <div class="bg-[#2c2c2e]/95 sm:glass-pill backdrop-blur-xl text-white px-4 sm:px-5 py-3 sm:py-2.5 rounded-2xl sm:rounded-full flex items-center gap-3 shadow-2xl sm:shadow-none border border-white/10 sm:border-none">
+            <div class="bg-green-500 sm:bg-gradient-to-r sm:from-pink-500 sm:to-rose-400 rounded-full p-1.5 sm:p-1 shrink-0"><i data-lucide="check" id="toastIcon" class="w-3.5 h-3.5 sm:w-3 sm:h-3 text-white"></i></div>
+            <span id="toastText" class="text-sm sm:text-xs font-semibold sm:font-bold tracking-wide sm:uppercase sm:tracking-wider">Copied to Clipboard</span>
+        </div>
     </div>
 
     <script>
-        // --- DATA & STATE ---
+        // --- STATE ---
         let corners = { tl: '#9333ea', tr: '#3b82f6', bl: '#10b981', br: '#f59e0b' };
         let gridSize = 4;
         let savedPalettes = JSON.parse(localStorage.getItem('chromaflux_saves') || '[]');
+        let activeHex = null;
 
         const colorGrid = document.getElementById('colorGrid');
         const gridWrapper = document.getElementById('gridWrapper');
         const densityInput = document.getElementById('gridDensity');
-        const densityVal = document.getElementById('densityVal');
         const nameInput = document.getElementById('projectName');
         
         const tooltip = document.getElementById('tooltip');
@@ -188,7 +267,7 @@
         const paletteList = document.getElementById('paletteList');
         const toast = document.getElementById('toast');
 
-        // --- MATH UTILS ---
+        // --- MATH ---
         const hexToRgb = (hex) => {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
@@ -201,13 +280,14 @@
         };
         const randomHex = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
-        // --- RENDER ---
+        // --- RENDER ENGINE ---
         function render() {
             colorGrid.innerHTML = '';
             colorGrid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
-            // Soft atmospheric glow behind the grid
-            gridWrapper.style.boxShadow = `0 30px 80px -20px ${corners.bl}40, 0 10px 40px -10px ${corners.tr}30`;
+            gridWrapper.style.boxShadow = window.innerWidth < 640 
+                ? `0 30px 80px -20px ${corners.bl}40, 0 10px 40px -10px ${corners.tr}30` 
+                : `0 30px 60px -20px ${corners.bl}30, 0 0 80px -20px ${corners.tr}20`;
 
             for (let y = 0; y < gridSize; y++) {
                 const yT = y / (gridSize - 1);
@@ -219,44 +299,67 @@
                     const finalHex = interpolateColor(left, right, xT);
                     
                     const cell = document.createElement('div');
-                    cell.className = 'relative w-full h-full transition-all duration-300';
+                    cell.className = 'relative w-full h-full transition-all duration-200 cell-hover';
                     cell.style.backgroundColor = finalHex;
                     
-                    // Single Tap for iOS Feel (Select & Copy instantly)
-                    const handleTap = (e) => {
-                        e.preventDefault(); // Stop double-tap zoom
-                        
-                        // Update tooltip
+                    const triggerTooltip = () => {
+                        activeHex = finalHex;
                         tooltip.style.opacity = '1';
-                        tooltip.style.transform = 'translate(-50%, 10px)';
+                        // Use different offsets depending on layout
+                        tooltip.style.transform = window.innerWidth < 640 ? 'translate(-50%, 10px)' : 'translate(-50%, 0) scale(1)';
                         tooltipHex.innerText = finalHex.toUpperCase();
                         tooltipColorIndicator.style.backgroundColor = finalHex;
-                        
-                        // Active state animation
-                        document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
-                        cell.classList.add('active-cell');
-
-                        copyToClipboard(finalHex);
                     };
 
-                    // Mobile touch and Desktop click
-                    cell.addEventListener('touchstart', handleTap, {passive: false});
-                    cell.addEventListener('mousedown', handleTap);
+                    // Desktop Hover Events
+                    cell.addEventListener('mouseenter', () => {
+                        if (window.innerWidth >= 640) triggerTooltip();
+                    });
+                    cell.addEventListener('mouseleave', () => {
+                        if (window.innerWidth >= 640) {
+                            tooltip.style.opacity = '0';
+                            tooltip.style.transform = 'translate(-50%, 0) scale(0.95)';
+                        }
+                    });
+
+                    // Mobile Tap / General Click
+                    cell.addEventListener('touchstart', (e) => {
+                        if (window.innerWidth < 640) {
+                            e.preventDefault(); // Fast touch handling, skip click
+                            triggerTooltip();
+                            document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
+                            cell.classList.add('active-cell');
+                            copyToClipboard(finalHex);
+                        }
+                    }, {passive: false});
+
+                    cell.addEventListener('click', () => {
+                        copyToClipboard(finalHex);
+                        if (window.innerWidth >= 640) {
+                            const oldText = tooltipHex.innerText;
+                            tooltipHex.innerText = "COPIED!";
+                            tooltipHex.style.color = "#4ade80";
+                            setTimeout(() => {
+                                if (activeHex === finalHex) { // Verify we are still hovering
+                                    tooltipHex.innerText = oldText;
+                                    tooltipHex.style.color = "white";
+                                }
+                            }, 1000);
+                        }
+                    });
                     
-                    // Add Corner Pickers
-                    const cornerKey = (x === 0 && y === 0) ? 'tl' : 
-                                      (x === gridSize-1 && y === 0) ? 'tr' : 
-                                      (x === 0 && y === gridSize-1) ? 'bl' : 
-                                      (x === gridSize-1 && y === gridSize-1) ? 'br' : null;
+                    // Corner Customization Nodes
+                    const cornerKey = (x === 0 && y === 0) ? 'tl' : (x === gridSize-1 && y === 0) ? 'tr' : (x === 0 && y === gridSize-1) ? 'bl' : (x === gridSize-1 && y === gridSize-1) ? 'br' : null;
                     
                     if (cornerKey) {
                         const pickerContainer = document.createElement('div');
-                        pickerContainer.className = 'absolute inset-0 flex items-center justify-center';
+                        pickerContainer.className = 'absolute inset-0 flex items-center justify-center group/anchor';
                         pickerContainer.innerHTML = `
-                            <div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg pointer-events-none">
+                            <div class="hidden sm:block w-1.5 h-1.5 bg-white/50 rounded-full shadow-lg backdrop-blur-md transform scale-100 group-hover/anchor:scale-150 group-hover/anchor:w-3 group-hover/anchor:h-3 group-hover/anchor:bg-white transition-all duration-300 pointer-events-none"></div>
+                            <div class="sm:hidden w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg pointer-events-none">
                                 <div class="w-2 h-2 bg-white rounded-full shadow-sm"></div>
-                                <input type="color" class="absolute inset-0 opacity-0 cursor-pointer pointer-events-auto w-full h-full" value="${corners[cornerKey]}">
                             </div>
+                            <input type="color" class="absolute inset-0 opacity-0 cursor-pointer pointer-events-auto w-full h-full" value="${corners[cornerKey]}">
                         `;
                         const input = pickerContainer.querySelector('input');
                         input.addEventListener('input', (e) => {
@@ -264,7 +367,6 @@
                             render();
                         });
                         
-                        // Prevent tap from firing when interacting with the color picker
                         input.addEventListener('touchstart', (e) => e.stopPropagation(), {passive: false});
                         input.addEventListener('mousedown', (e) => e.stopPropagation());
                         
@@ -276,20 +378,30 @@
             }
         }
 
+        // --- ACTIONS ---
         let toastTimeout;
-        function showToast(msg) {
+        function showToast(msg, iconName = "check") {
             clearTimeout(toastTimeout);
             const toastText = document.getElementById('toastText');
+            const toastIcon = document.getElementById('toastIcon');
+            
             toastText.innerText = msg;
             
+            // Adjust icon styling based on action type
+            if (iconName === "heart" && window.innerWidth >= 640) {
+                 toastIcon.setAttribute('data-lucide', 'heart');
+            } else {
+                 toastIcon.setAttribute('data-lucide', 'check');
+            }
+            lucide.createIcons();
+            
             toast.classList.remove('hidden');
-            // Force reflow
             void toast.offsetWidth;
             toast.classList.add('toast-active');
             
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('toast-active');
-                setTimeout(() => toast.classList.add('hidden'), 400); // Wait for anim
+                setTimeout(() => toast.classList.add('hidden'), 400);
             }, 2000);
         }
 
@@ -302,40 +414,44 @@
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            showToast(`${text.toUpperCase()} Copied`);
+            
+            if (window.innerWidth < 640) showToast(`${text.toUpperCase()} Copied`);
         }
 
         function savePalette() {
             const p = { id: Date.now(), name: nameInput.value || 'Untitled', corners: { ...corners } };
             savedPalettes.unshift(p);
             localStorage.setItem('chromaflux_saves', JSON.stringify(savedPalettes));
-            showToast("Saved to Studio");
+            showToast(window.innerWidth < 640 ? "Saved to Studio" : "Palette Saved", "heart");
             updateSidebar();
         }
 
         function updateSidebar() {
             paletteList.innerHTML = savedPalettes.length ? '' : `
-                <div class="flex flex-col items-center justify-center py-20 text-gray-500 gap-3">
+                <div class="flex flex-col items-center justify-center py-20 text-gray-500 gap-3 border sm:border-dashed border-transparent sm:border-white/10 rounded-2xl">
                     <i data-lucide="ghost" class="w-8 h-8 opacity-50"></i>
-                    <p class="text-xs font-medium">No palettes saved yet.</p>
+                    <p class="text-xs sm:font-mono font-medium">No palettes saved yet.</p>
                 </div>
             `;
             
             savedPalettes.forEach(p => {
                 const item = document.createElement('div');
-                item.className = 'bg-[#2c2c2e] rounded-2xl p-3.5 flex gap-4 items-center group active:scale-[0.98] transition-transform cursor-pointer border border-white/5';
+                // Responsive Item CSS: Morph from Mobile iOS list item -> Desktop vertical card
+                item.className = 'group relative bg-[#2c2c2e] sm:bg-black/40 rounded-2xl sm:rounded-[1rem] p-3.5 sm:p-3 flex sm:flex-col gap-4 sm:gap-0 sm:border sm:border-white/5 sm:hover:border-white/20 transition-all cursor-pointer active:scale-[0.98] sm:active:scale-100';
                 item.innerHTML = `
-                    <div class="w-14 h-14 rounded-xl overflow-hidden grid grid-cols-2 shrink-0 shadow-inner">
+                    <div class="flex justify-between items-center sm:items-start sm:mb-3 w-full sm:w-auto">
+                        <div class="flex-1 min-w-0 flex flex-col justify-center sm:block">
+                            <span class="text-sm sm:text-xs font-semibold sm:font-mono text-white sm:text-gray-300 truncate block">${p.name}</span>
+                            <span class="text-[10px] text-gray-400 font-mono mt-1 sm:hidden">${p.corners.tl.toUpperCase()}</span>
+                        </div>
+                        <button class="delete-btn p-3 sm:p-1 bg-red-500/10 sm:bg-transparent rounded-full sm:rounded text-red-400 sm:text-gray-600 sm:hover:text-red-400 active:bg-red-500/20 sm:active:bg-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
+                            <i data-lucide="trash-2" class="w-4 h-4 sm:w-3.5 sm:h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="w-14 h-14 sm:w-full sm:h-20 rounded-xl overflow-hidden grid grid-cols-2 shrink-0 shadow-inner sm:shadow-none sm:order-last order-first">
                         <div style="background:${p.corners.tl}"></div><div style="background:${p.corners.tr}"></div>
                         <div style="background:${p.corners.bl}"></div><div style="background:${p.corners.br}"></div>
                     </div>
-                    <div class="flex-1 min-w-0 flex flex-col justify-center">
-                        <p class="text-sm font-semibold text-white truncate">${p.name}</p>
-                        <p class="text-[10px] text-gray-400 font-mono mt-1">${p.corners.tl.toUpperCase()}</p>
-                    </div>
-                    <button class="delete-btn p-3 bg-red-500/10 rounded-full text-red-400 active:bg-red-500/20 transition-colors">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
                 `;
                 item.addEventListener('click', (e) => {
                     if (e.target.closest('.delete-btn')) {
@@ -355,26 +471,21 @@
         }
 
         function toggleSidebar(force) {
-            const state = typeof force === 'boolean' ? force : sidebar.classList.contains('translate-y-full');
+            const state = typeof force === 'boolean' ? force : !sidebar.classList.contains('sidebar-active');
             if (state) {
-                // Open
-                sidebar.classList.remove('translate-y-full');
-                sheetBackdrop.classList.remove('opacity-0', 'pointer-events-none');
-                sheetBackdrop.classList.add('opacity-100', 'pointer-events-auto');
+                sidebar.classList.add('sidebar-active');
+                sheetBackdrop.classList.add('active');
             } else {
-                // Close
-                sidebar.classList.add('translate-y-full');
-                sheetBackdrop.classList.add('opacity-0', 'pointer-events-none');
-                sheetBackdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                sidebar.classList.remove('sidebar-active');
+                sheetBackdrop.classList.remove('active');
             }
         }
 
-        // --- EVENTS ---
+        // --- EVENT LISTENERS ---
         document.getElementById('randomBtn').addEventListener('click', () => {
             corners = { tl: randomHex(), tr: randomHex(), bl: randomHex(), br: randomHex() };
             nameInput.value = `Palette ${corners.tl.toUpperCase()}`;
             render();
-            // Clear tooltip
             tooltip.style.opacity = '0';
             document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
         });
@@ -386,17 +497,29 @@
 
         densityInput.addEventListener('input', (e) => {
             gridSize = parseInt(e.target.value);
-            densityVal.innerText = `${gridSize}x${gridSize}`;
+            document.querySelectorAll('.densityValDesktop, .densityValMobile').forEach(el => {
+                el.innerText = `${gridSize}x${gridSize}`;
+            });
+            const swatchBadge = document.getElementById('swatchCount');
+            if (swatchBadge) swatchBadge.innerText = `${gridSize * gridSize} SWATCHES`;
             render();
         });
 
-        // Hide tooltip when tapping background
+        // Hide mobile tooltip when tapping background
         document.body.addEventListener('touchstart', (e) => {
-            if (!e.target.closest('#colorGrid')) {
+            if (window.innerWidth < 640 && !e.target.closest('#colorGrid') && !e.target.closest('input')) {
                 tooltip.style.opacity = '0';
                 document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
             }
         }, {passive: true});
+
+        // Spacebar to randomize on desktop
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                document.getElementById('randomBtn').click();
+            }
+        });
 
         // --- INIT ---
         lucide.createIcons();
